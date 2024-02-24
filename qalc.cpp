@@ -30,16 +30,32 @@ extern "C"
     int qalculate(const char *in, char *out, int len, int color)
     {
 
+        bool is_approx;
+
         EvaluationOptions eo;
         PrintOptions po;
 
-        eo.calculate_variables = false;
-        eo.interval_calculation = INTERVAL_CALCULATION_NONE;
-        eo.approximation = APPROXIMATION_APPROXIMATE;
+        eo.calculate_variables = true;
+
+        po.interval_display = INTERVAL_DISPLAY_SIGNIFICANT_DIGITS;
+        po.is_approximate = &is_approx;
+
+        po.use_max_decimals = true;
+        po.max_decimals = 10;
+        
 
         std::string pe;
-        std::string rs = CALCULATOR->calculateAndPrint(CALCULATOR->unlocalizeExpression(in), 2000, eo, po, AUTOMATIC_FRACTION_OFF, AUTOMATIC_APPROXIMATION_AUTO, &pe, 1024, NULL, true, color, TAG_TYPE_TERMINAL);
+        std::string rs = CALCULATOR->calculateAndPrint(CALCULATOR->unlocalizeExpression(in), 2000, eo, po, AUTOMATIC_FRACTION_AUTO, AUTOMATIC_APPROXIMATION_AUTO, &pe, 1024, NULL, true, color, TAG_TYPE_TERMINAL);
 
-        return snprintf(out, len, "%s ≈ %s", pe.c_str(), rs.c_str());
+        CALCULATOR->resetVariables();
+
+        if(CALCULATOR->checkSaveFunctionCalled()) 
+            return snprintf(out, len, "Cannot save variables.");
+
+        if(is_approx)
+            return snprintf(out, len, "%s ≈ %s", pe.c_str(), rs.c_str());
+        else
+            return snprintf(out, len, "%s = %s", pe.c_str(), rs.c_str());
+
     }
 }

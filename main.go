@@ -14,7 +14,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/whyrusleeping/hellabot"
+	hbot "github.com/whyrusleeping/hellabot"
 
 	log "gopkg.in/inconshreveable/log15.v2"
 )
@@ -48,15 +48,20 @@ func qalculate(in string) string {
 	name := C.CString(in)
 	defer C.free(unsafe.Pointer(name))
 
-	ptr := C.malloc(C.sizeof_char * 1024)
+	ptr := C.malloc(C.sizeof_char * 1025) // don't forget the null terminator
 	defer C.free(unsafe.Pointer(ptr))
 
 	size := C.qalculate(name, (*C.char)(ptr), C.int(1024), 1)
 
 	b := C.GoBytes(ptr, size)
 	s := colors.Replace(string(b))
+	s = colorStrip.ReplaceAllString(s, "")
 
-	return colorStrip.ReplaceAllString(s, "")
+	if len(s) > 400 {
+		return "Response too long."
+	}
+
+	return s
 
 }
 
@@ -79,7 +84,7 @@ func main() {
 				"bucket",
 				"isaac",
 				"dice",
-				"unitsbot":
+				"unitbot":
 				return false
 			}
 			return true
@@ -93,7 +98,7 @@ func main() {
 
 	botOptions := func(bot *hbot.Bot) {
 		bot.SSL = true
-		bot.Channels = []string{"#bot-test-t486"}
+		bot.Channels = []string{"#xkcd-coding"}
 	}
 
 	mybot, err := hbot.NewBot("irc.slashnet.org:6697", "qalc", botOptions)
